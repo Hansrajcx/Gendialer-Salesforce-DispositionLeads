@@ -7,6 +7,7 @@ const {
 const { getSalesforceAccessToken } = require('../src/services/salesforce/auth');
 const client = require('../src/services/salesforce/client');
 const { createDispositionLead } = require('../src/services/salesforce/dispositionLead');
+const { OBJECT_NAME, SALESFORCE_FIELDS } = require('../src/services/salesforce/schema');
 const { escapeSoqlString } = require('../src/utils/soql');
 const { SEED_RECORDS, recordsToCreate } = require('../src/setup/seedData');
 
@@ -15,15 +16,15 @@ async function loadExistingSeedRecords() {
   const inList = emails.map((email) => `'${escapeSoqlString(email)}'`).join(', ');
   const result = await client.get('/query', {
     query: {
-      q: `SELECT Email1__c, DispositionStatus__c, DispositionDateTime__c FROM voiceraFlex__DispositionLead__c WHERE Email1__c IN (${inList})`,
+      q: `SELECT ${SALESFORCE_FIELDS.email1}, ${SALESFORCE_FIELDS.dispositionStatus}, ${SALESFORCE_FIELDS.dispositionDateTime} FROM ${OBJECT_NAME} WHERE ${SALESFORCE_FIELDS.email1} IN (${inList})`,
     },
   });
   const records = result && Array.isArray(result.records) ? result.records : [];
 
   return records.map((record) => ({
-    email1: record.Email1__c,
-    dispositionStatus: record.DispositionStatus__c,
-    dispositionDateTime: record.DispositionDateTime__c,
+    email1: record[SALESFORCE_FIELDS.email1],
+    dispositionStatus: record[SALESFORCE_FIELDS.dispositionStatus],
+    dispositionDateTime: record[SALESFORCE_FIELDS.dispositionDateTime],
   }));
 }
 

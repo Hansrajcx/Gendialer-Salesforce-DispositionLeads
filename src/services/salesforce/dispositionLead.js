@@ -1,6 +1,7 @@
 const client = require('./client');
 const { AppError } = require('../../utils/errors');
 const { escapeSoqlString, toSoqlDateTime } = require('../../utils/soql');
+const { OBJECT_NAME, SALESFORCE_FIELDS } = require('./schema');
 const {
   FIELD_SPECS,
   validateCreateBody,
@@ -9,7 +10,6 @@ const {
   isSalesforceId,
 } = require('../../utils/validation');
 
-const OBJECT_NAME = 'DispositionLead__c';
 const SELECT_FIELDS = ['Id', ...FIELD_SPECS.map((field) => field.salesforce)].join(', ');
 
 function toUtcIso(value) {
@@ -73,24 +73,24 @@ function buildSearchQuery(query) {
   const clauses = [];
 
   if (parsed.phone1) {
-    clauses.push(`Phone1__c = '${escapeSoqlString(parsed.phone1)}'`);
+    clauses.push(`${SALESFORCE_FIELDS.phone1} = '${escapeSoqlString(parsed.phone1)}'`);
   }
   if (parsed.email1) {
-    clauses.push(`Email1__c = '${escapeSoqlString(parsed.email1)}'`);
+    clauses.push(`${SALESFORCE_FIELDS.email1} = '${escapeSoqlString(parsed.email1)}'`);
   }
   if (parsed.dispositionStatus) {
-    clauses.push(`DispositionStatus__c = '${escapeSoqlString(parsed.dispositionStatus)}'`);
+    clauses.push(`${SALESFORCE_FIELDS.dispositionStatus} = '${escapeSoqlString(parsed.dispositionStatus)}'`);
   }
 
   for (const bound of parsed.bounds) {
-    clauses.push(`DispositionDateTime__c ${bound.op} ${toSoqlDateTime(bound.value)}`);
+    clauses.push(`${SALESFORCE_FIELDS.dispositionDateTime} ${bound.op} ${toSoqlDateTime(bound.value)}`);
   }
 
   const whereSql = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
   const soql = [
     `SELECT ${SELECT_FIELDS}`,
     `FROM ${OBJECT_NAME}${whereSql}`,
-    `ORDER BY DispositionDateTime__c ${parsed.sortDirection}`,
+    `ORDER BY ${SALESFORCE_FIELDS.dispositionDateTime} ${parsed.sortDirection}`,
     `LIMIT ${parsed.pageSize}`,
     `OFFSET ${parsed.offset}`,
   ].join(' ');

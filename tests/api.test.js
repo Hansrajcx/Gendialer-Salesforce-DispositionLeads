@@ -9,6 +9,7 @@ const request = require('supertest');
 const client = require('../src/services/salesforce/client');
 const { createApp } = require('../src/app');
 const { AppError } = require('../src/utils/errors');
+const { OBJECT_NAME, SALESFORCE_FIELDS } = require('../src/services/salesforce/schema');
 
 const app = createApp();
 const RECORD_ID = 'a01ABCDEFGHIJKLMNO';
@@ -53,24 +54,24 @@ describe('disposition lead API', () => {
       id: RECORD_ID,
       message: 'Disposition lead created successfully',
     });
-    expect(client.post).toHaveBeenCalledWith('/sobjects/DispositionLead__c', {
-      ContactId__c: '003ABCDEFGHIJKLMNO',
-      FirstName__c: 'John',
-      MiddleName__c: 'A',
-      LastName__c: 'Doe',
-      Phone1__c: '9876543210',
-      Email1__c: 'john@example.com',
-      Country__c: 'India',
-      City__c: 'Mumbai',
-      State__c: 'Maharashtra',
-      Street__c: 'ABC Street',
-      Zip__c: '400001',
-      Metric1__c: 10,
-      Metric2__c: 20,
-      Metric3__c: 30,
-      Metric4__c: 40,
-      DispositionStatus__c: 'Interested',
-      DispositionDateTime__c: '2026-09-28T09:15:00.000Z',
+    expect(client.post).toHaveBeenCalledWith(`/sobjects/${OBJECT_NAME}`, {
+      [SALESFORCE_FIELDS.contactId]: '003ABCDEFGHIJKLMNO',
+      [SALESFORCE_FIELDS.firstName]: 'John',
+      [SALESFORCE_FIELDS.middleName]: 'A',
+      [SALESFORCE_FIELDS.lastName]: 'Doe',
+      [SALESFORCE_FIELDS.phone1]: '9876543210',
+      [SALESFORCE_FIELDS.email1]: 'john@example.com',
+      [SALESFORCE_FIELDS.country]: 'India',
+      [SALESFORCE_FIELDS.city]: 'Mumbai',
+      [SALESFORCE_FIELDS.state]: 'Maharashtra',
+      [SALESFORCE_FIELDS.street]: 'ABC Street',
+      [SALESFORCE_FIELDS.zip]: '400001',
+      [SALESFORCE_FIELDS.metric1]: 10,
+      [SALESFORCE_FIELDS.metric2]: 20,
+      [SALESFORCE_FIELDS.metric3]: 30,
+      [SALESFORCE_FIELDS.metric4]: 40,
+      [SALESFORCE_FIELDS.dispositionStatus]: 'Interested',
+      [SALESFORCE_FIELDS.dispositionDateTime]: '2026-09-28T09:15:00.000Z',
     });
     expect(client.patch).not.toHaveBeenCalled();
     expect(client.get).not.toHaveBeenCalled();
@@ -85,7 +86,7 @@ describe('disposition lead API', () => {
       .send({ phone1: '9876543210' });
 
     expect(response.status).toBe(201);
-    const sent = client.post.mock.calls[0][1].DispositionDateTime__c;
+    const sent = client.post.mock.calls[0][1][SALESFORCE_FIELDS.dispositionDateTime];
     expect(new Date(sent).getTime()).toBeGreaterThanOrEqual(before - 1000);
     expect(sent.endsWith('Z')).toBe(true);
   });
@@ -152,10 +153,10 @@ describe('disposition lead API', () => {
       message: 'Disposition lead updated successfully',
     });
     expect(client.patch).toHaveBeenCalledWith(
-      `/sobjects/DispositionLead__c/${RECORD_ID}`,
+      `/sobjects/${OBJECT_NAME}/${RECORD_ID}`,
       {
-        DispositionStatus__c: 'Callback',
-        Metric1__c: 25,
+        [SALESFORCE_FIELDS.dispositionStatus]: 'Callback',
+        [SALESFORCE_FIELDS.metric1]: 25,
       }
     );
     expect(client.post).not.toHaveBeenCalled();
@@ -170,8 +171,8 @@ describe('disposition lead API', () => {
 
     expect(response.status).toBe(200);
     expect(client.patch).toHaveBeenCalledWith(
-      `/sobjects/DispositionLead__c/${RECORD_ID}`,
-      { DispositionStatus__c: null }
+      `/sobjects/${OBJECT_NAME}/${RECORD_ID}`,
+      { [SALESFORCE_FIELDS.dispositionStatus]: null }
     );
   });
 
@@ -217,23 +218,23 @@ describe('disposition lead API', () => {
       return {
         records: [{
           Id: RECORD_ID,
-          ContactId__c: '003ABCDEFGHIJKLMNO',
-          FirstName__c: 'John',
-          MiddleName__c: 'A',
-          LastName__c: 'Doe',
-          Phone1__c: '9876543210',
-          Email1__c: 'john@example.com',
-          Country__c: 'India',
-          City__c: 'Mumbai',
-          State__c: 'Maharashtra',
-          Street__c: 'ABC Street',
-          Zip__c: '400001',
-          Metric1__c: 10,
-          Metric2__c: 20,
-          Metric3__c: 30,
-          Metric4__c: 40,
-          DispositionStatus__c: 'Interested',
-          DispositionDateTime__c: '2026-09-28T09:15:00.000+0000',
+          [SALESFORCE_FIELDS.contactId]: '003ABCDEFGHIJKLMNO',
+          [SALESFORCE_FIELDS.firstName]: 'John',
+          [SALESFORCE_FIELDS.middleName]: 'A',
+          [SALESFORCE_FIELDS.lastName]: 'Doe',
+          [SALESFORCE_FIELDS.phone1]: '9876543210',
+          [SALESFORCE_FIELDS.email1]: 'john@example.com',
+          [SALESFORCE_FIELDS.country]: 'India',
+          [SALESFORCE_FIELDS.city]: 'Mumbai',
+          [SALESFORCE_FIELDS.state]: 'Maharashtra',
+          [SALESFORCE_FIELDS.street]: 'ABC Street',
+          [SALESFORCE_FIELDS.zip]: '400001',
+          [SALESFORCE_FIELDS.metric1]: 10,
+          [SALESFORCE_FIELDS.metric2]: 20,
+          [SALESFORCE_FIELDS.metric3]: 30,
+          [SALESFORCE_FIELDS.metric4]: 40,
+          [SALESFORCE_FIELDS.dispositionStatus]: 'Interested',
+          [SALESFORCE_FIELDS.dispositionDateTime]: '2026-09-28T09:15:00.000+0000',
         }],
       };
     });
@@ -255,11 +256,32 @@ describe('disposition lead API', () => {
     expect(response.body.data[0].phone1).toBe('9876543210');
 
     const soql = client.get.mock.calls[0][1].query.q;
-    expect(soql).toContain("Phone1__c = '9876543210'");
-    expect(soql).toContain("DispositionStatus__c = 'Interested'");
-    expect(soql).toContain('DispositionDateTime__c >= 2026-09-01T00:00:00.000Z');
-    expect(soql).toContain('DispositionDateTime__c < 2026-09-29T00:00:00.000Z');
-    expect(soql).toContain('ORDER BY DispositionDateTime__c DESC');
+    expect(soql).toContain(`${SALESFORCE_FIELDS.phone1} = '9876543210'`);
+    expect(soql).toContain(`${SALESFORCE_FIELDS.dispositionStatus} = 'Interested'`);
+    expect(soql).toContain(`${SALESFORCE_FIELDS.dispositionDateTime} >= 2026-09-01T00:00:00.000Z`);
+    expect(soql).toContain(`${SALESFORCE_FIELDS.dispositionDateTime} < 2026-09-29T00:00:00.000Z`);
+    expect(soql).toContain(`ORDER BY ${SALESFORCE_FIELDS.dispositionDateTime} DESC`);
+    expect(soql).toContain(`FROM ${OBJECT_NAME}`);
+    expect(response.body.data[0]).toEqual({
+      id: RECORD_ID,
+      contactId: '003ABCDEFGHIJKLMNO',
+      firstName: 'John',
+      middleName: 'A',
+      lastName: 'Doe',
+      phone1: '9876543210',
+      email1: 'john@example.com',
+      country: 'India',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      street: 'ABC Street',
+      zip: '400001',
+      metric1: 10,
+      metric2: 20,
+      metric3: 30,
+      metric4: 40,
+      dispositionStatus: 'Interested',
+      dispositionDateTime: '2026-09-28T09:15:00.000Z',
+    });
   });
 
   test('does not add a WHERE clause when no filters are provided', async () => {
@@ -273,6 +295,10 @@ describe('disposition lead API', () => {
     const response = await request(app).get('/api/disposition-leads');
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual([]);
-    expect(client.get.mock.calls[0][1].query.q).not.toContain('WHERE');
+    const soql = client.get.mock.calls[0][1].query.q;
+    expect(soql).toContain(`FROM ${OBJECT_NAME}`);
+    expect(soql).toContain(`ORDER BY ${SALESFORCE_FIELDS.dispositionDateTime} DESC`);
+    expect(client.get.mock.calls[1][1].query.q).toBe(`SELECT COUNT(Id) total FROM ${OBJECT_NAME}`);
+    expect(soql).not.toContain('WHERE');
   });
 });

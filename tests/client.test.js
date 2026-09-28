@@ -5,6 +5,7 @@ jest.mock('../src/services/salesforce/auth', () => ({
 
 const auth = require('../src/services/salesforce/auth');
 const client = require('../src/services/salesforce/client');
+const { OBJECT_NAME, SALESFORCE_FIELDS } = require('../src/services/salesforce/schema');
 const { applyTestConfig, clearSalesforceEnv, snapshotEnv, restoreEnv } = require('./helpers');
 
 describe('Salesforce REST client', () => {
@@ -46,10 +47,10 @@ describe('Salesforce REST client', () => {
         text: async () => '',
       });
 
-    await client.get('/query', { query: { q: 'SELECT Id FROM DispositionLead__c' } });
-    await client.post('/sobjects/DispositionLead__c', { Phone1__c: '9876543210' });
-    await client.patch('/sobjects/DispositionLead__c/a01ABCDEFGHIJKLMNO', { Metric1__c: 25 });
-    await client.delete('/sobjects/DispositionLead__c/a01ABCDEFGHIJKLMNO');
+    await client.get('/query', { query: { q: `SELECT Id FROM ${OBJECT_NAME}` } });
+    await client.post(`/sobjects/${OBJECT_NAME}`, { [SALESFORCE_FIELDS.phone1]: '9876543210' });
+    await client.patch(`/sobjects/${OBJECT_NAME}/a01ABCDEFGHIJKLMNO`, { [SALESFORCE_FIELDS.metric1]: 25 });
+    await client.delete(`/sobjects/${OBJECT_NAME}/a01ABCDEFGHIJKLMNO`);
 
     const methods = global.fetch.mock.calls.map((call) => call[1].method);
     expect(methods).toEqual(['GET', 'POST', 'PATCH', 'DELETE']);
@@ -57,8 +58,12 @@ describe('Salesforce REST client', () => {
       'https://example.my.salesforce.com/services/data/v64.0/query?q='
     );
     expect(global.fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer test-access-token');
-    expect(JSON.parse(global.fetch.mock.calls[1][1].body)).toEqual({ Phone1__c: '9876543210' });
-    expect(global.fetch.mock.calls[2][1].body).toBe(JSON.stringify({ Metric1__c: 25 }));
+    expect(JSON.parse(global.fetch.mock.calls[1][1].body)).toEqual({
+      [SALESFORCE_FIELDS.phone1]: '9876543210',
+    });
+    expect(global.fetch.mock.calls[2][1].body).toBe(JSON.stringify({
+      [SALESFORCE_FIELDS.metric1]: 25,
+    }));
   });
 
   test('refreshes the token once after a 401', async () => {
@@ -84,7 +89,7 @@ describe('Salesforce REST client', () => {
         text: async () => JSON.stringify({ records: [] }),
       });
 
-    await client.get('/query', { query: { q: 'SELECT Id FROM DispositionLead__c' } });
+    await client.get('/query', { query: { q: `SELECT Id FROM ${OBJECT_NAME}` } });
 
     expect(auth.resetTokenCache).toHaveBeenCalledTimes(1);
     expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -101,7 +106,7 @@ describe('Salesforce REST client', () => {
       }]),
     });
 
-    await expect(client.post('/sobjects/DispositionLead__c', {})).rejects.toMatchObject({
+    await expect(client.post(`/sobjects/${OBJECT_NAME}`, {})).rejects.toMatchObject({
       status: 502,
       code: 'SALESFORCE_API_ERROR',
       message: 'Salesforce request failed',
@@ -118,7 +123,7 @@ describe('Salesforce REST client', () => {
       }]),
     });
 
-    await expect(client.post('/sobjects/DispositionLead__c', {})).rejects.toMatchObject({
+    await expect(client.post(`/sobjects/${OBJECT_NAME}`, {})).rejects.toMatchObject({
       code: 'SALESFORCE_API_ERROR',
       message: 'Required fields are missing',
     });
@@ -135,7 +140,7 @@ describe('Salesforce REST client', () => {
     });
 
     await expect(
-      client.patch('/sobjects/DispositionLead__c/a01ABCDEFGHIJKLMNO', { Metric1__c: 1 })
+      client.patch(`/sobjects/${OBJECT_NAME}/a01ABCDEFGHIJKLMNO`, { [SALESFORCE_FIELDS.metric1]: 1 })
     ).rejects.toMatchObject({
       status: 404,
       code: 'NOT_FOUND',

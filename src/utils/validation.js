@@ -1,23 +1,24 @@
 const { AppError } = require('./errors');
+const { SALESFORCE_FIELDS } = require('../services/salesforce/schema');
 
 const FIELD_SPECS = [
-  { name: 'contactId', salesforce: 'ContactId__c', type: 'string', maxLength: 18 },
-  { name: 'firstName', salesforce: 'FirstName__c', type: 'string', maxLength: 255 },
-  { name: 'middleName', salesforce: 'MiddleName__c', type: 'string', maxLength: 255 },
-  { name: 'lastName', salesforce: 'LastName__c', type: 'string', maxLength: 255 },
-  { name: 'phone1', salesforce: 'Phone1__c', type: 'string', maxLength: 40 },
-  { name: 'email1', salesforce: 'Email1__c', type: 'email', maxLength: 80 },
-  { name: 'country', salesforce: 'Country__c', type: 'string', maxLength: 255 },
-  { name: 'city', salesforce: 'City__c', type: 'string', maxLength: 255 },
-  { name: 'state', salesforce: 'State__c', type: 'string', maxLength: 255 },
-  { name: 'street', salesforce: 'Street__c', type: 'string', maxLength: 255 },
-  { name: 'zip', salesforce: 'Zip__c', type: 'string', maxLength: 255 },
-  { name: 'metric1', salesforce: 'Metric1__c', type: 'number' },
-  { name: 'metric2', salesforce: 'Metric2__c', type: 'number' },
-  { name: 'metric3', salesforce: 'Metric3__c', type: 'number' },
-  { name: 'metric4', salesforce: 'Metric4__c', type: 'number' },
-  { name: 'dispositionStatus', salesforce: 'DispositionStatus__c', type: 'string', maxLength: 255 },
-  { name: 'dispositionDateTime', salesforce: 'DispositionDateTime__c', type: 'datetime' },
+  { name: 'contactId', salesforce: SALESFORCE_FIELDS.contactId, type: 'string', maxLength: 18 },
+  { name: 'firstName', salesforce: SALESFORCE_FIELDS.firstName, type: 'string', maxLength: 255 },
+  { name: 'middleName', salesforce: SALESFORCE_FIELDS.middleName, type: 'string', maxLength: 255 },
+  { name: 'lastName', salesforce: SALESFORCE_FIELDS.lastName, type: 'string', maxLength: 255 },
+  { name: 'phone1', salesforce: SALESFORCE_FIELDS.phone1, type: 'string', maxLength: 40 },
+  { name: 'email1', salesforce: SALESFORCE_FIELDS.email1, type: 'email', maxLength: 80 },
+  { name: 'country', salesforce: SALESFORCE_FIELDS.country, type: 'string', maxLength: 255 },
+  { name: 'city', salesforce: SALESFORCE_FIELDS.city, type: 'string', maxLength: 255 },
+  { name: 'state', salesforce: SALESFORCE_FIELDS.state, type: 'string', maxLength: 255 },
+  { name: 'street', salesforce: SALESFORCE_FIELDS.street, type: 'string', maxLength: 255 },
+  { name: 'zip', salesforce: SALESFORCE_FIELDS.zip, type: 'string', maxLength: 255 },
+  { name: 'metric1', salesforce: SALESFORCE_FIELDS.metric1, type: 'number' },
+  { name: 'metric2', salesforce: SALESFORCE_FIELDS.metric2, type: 'number' },
+  { name: 'metric3', salesforce: SALESFORCE_FIELDS.metric3, type: 'number' },
+  { name: 'metric4', salesforce: SALESFORCE_FIELDS.metric4, type: 'number' },
+  { name: 'dispositionStatus', salesforce: SALESFORCE_FIELDS.dispositionStatus, type: 'string', maxLength: 255 },
+  { name: 'dispositionDateTime', salesforce: SALESFORCE_FIELDS.dispositionDateTime, type: 'datetime' },
 ];
 
 const FIELD_BY_NAME = new Map(FIELD_SPECS.map((field) => [field.name, field]));
@@ -123,14 +124,14 @@ function validateCreateBody(body, now = new Date()) {
   rejectUnknownFields(body);
 
   const record = mapFields(body, { allowNull: false });
-  const phone = record.Phone1__c;
-  const email = record.Email1__c;
+  const phone = record[SALESFORCE_FIELDS.phone1];
+  const email = record[SALESFORCE_FIELDS.email1];
   if (!phone && !email) {
     throw new AppError(400, 'VALIDATION_ERROR', 'At least phone1 or email1 is required');
   }
 
   if (!Object.prototype.hasOwnProperty.call(body, 'dispositionDateTime')) {
-    record.DispositionDateTime__c = now.toISOString();
+    record[SALESFORCE_FIELDS.dispositionDateTime] = now.toISOString();
   }
 
   return record;
