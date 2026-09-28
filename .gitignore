@@ -1,0 +1,10 @@
+node_modules/
+coverage/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.sf/
+.sfdx/

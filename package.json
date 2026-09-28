@@ -1,0 +1,25 @@
+{
+  "name": "sf-gendial-disposition-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Salesforce Disposition Lead API using the OAuth 2.0 JWT bearer flow",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "setup": "node scripts/setup-salesforce.js",
+    "seed": "node scripts/seed-salesforce.js",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}
