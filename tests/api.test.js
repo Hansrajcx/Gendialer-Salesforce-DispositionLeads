@@ -35,10 +35,46 @@ const createBody = {
 };
 
 describe('disposition lead API', () => {
+  let originalCorsOrigins;
+
   beforeEach(() => {
+    originalCorsOrigins = process.env.CORS_ORIGINS;
+    process.env.CORS_ORIGINS = 'http://localhost:3000';
     client.post.mockReset();
     client.patch.mockReset();
     client.get.mockReset();
+  });
+
+  afterEach(() => {
+    if (originalCorsOrigins === undefined) {
+      delete process.env.CORS_ORIGINS;
+    } else {
+      process.env.CORS_ORIGINS = originalCorsOrigins;
+    }
+  });
+
+  test('answers allowed browser preflight requests without a redirect', async () => {
+    const response = await request(app)
+      .options('/api/disposition-leads')
+      .set('Origin', 'http://localhost:3000')
+      .set('Access-Control-Request-Method', 'POST')
+      .set('Access-Control-Request-Headers', 'content-type,ngrok-skip-browser-warning');
+
+    expect(response.status).toBe(204);
+    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+    expect(response.headers['access-control-allow-methods']).toContain('POST');
+    expect(response.headers['access-control-allow-headers']).toContain('Content-Type');
+    expect(response.headers['access-control-allow-headers']).toContain('ngrok-skip-browser-warning');
+  });
+
+  test('does not allow an origin outside the configured allowlist', async () => {
+    const response = await request(app)
+      .options('/api/disposition-leads')
+      .set('Origin', 'https://untrusted.example')
+      .set('Access-Control-Request-Method', 'POST');
+
+    expect(response.status).toBe(200);
+    expect(response.headers).not.toHaveProperty('access-control-allow-origin');
   });
 
   test('creates a new history record', async () => {

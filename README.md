@@ -96,7 +96,10 @@ SALESFORCE_PRIVATE_KEY=
 SALESFORCE_PRIVATE_KEY_PATH=
 SALESFORCE_API_VERSION=v64.0
 PORT=3000
+CORS_ORIGINS=http://localhost:3000
 ```
+
+`CORS_ORIGINS` is a comma-separated allowlist of browser origins. Set it to the exact origin hosting the Twilio Flex app. When exposing the API through ngrok, configure the Flex client to call the `https://` ngrok URL directly; HTTP-to-HTTPS redirects are not supported for browser preflight requests. For ngrok's free browser warning, the Flex request must also send the `ngrok-skip-browser-warning: true` header.
 
 Sandbox:
 
